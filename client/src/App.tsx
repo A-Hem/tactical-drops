@@ -23,6 +23,11 @@ import AdminDashboard from "@/pages/admin/dashboard";
 import AdminProducts from "@/pages/admin/products";
 import AdminNewProduct from "@/pages/admin/products/new";
 import AdminEditProduct from "@/pages/admin/products/edit/[id]";
+import AdminOrders from "@/pages/admin/orders";
+import AdminOrderDetail from "@/pages/admin/orders/[id]";
+import AdminProcessOrders from "@/pages/admin/orders/process";
+import AdminInventory from "@/pages/admin/inventory";
+import AdminCreateShippingLabel from "@/pages/admin/shipping/create-label";
 
 function Router() {
   return (
