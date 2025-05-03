@@ -85,10 +85,14 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
     setIsLoading(true);
     try {
-      const response = await apiRequest("POST", "/api/cart", item, {
+      const response = await fetch("/api/cart", {
+        method: "POST",
         headers: {
+          "Content-Type": "application/json",
           "X-Session-ID": sessionId,
         },
+        body: JSON.stringify(item),
+        credentials: "include"
       });
 
       if (response.ok) {
@@ -117,7 +121,15 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
     setIsLoading(true);
     try {
-      const response = await apiRequest("PUT", `/api/cart/${id}`, { quantity });
+      const response = await fetch(`/api/cart/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Session-ID": sessionId
+        },
+        body: JSON.stringify({ quantity }),
+        credentials: "include"
+      });
 
       if (response.ok) {
         setItems((prevItems) =>
@@ -139,7 +151,13 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
     setIsLoading(true);
     try {
-      const response = await apiRequest("DELETE", `/api/cart/${id}`);
+      const response = await fetch(`/api/cart/${id}`, {
+        method: "DELETE",
+        headers: {
+          "X-Session-ID": sessionId
+        },
+        credentials: "include"
+      });
 
       if (response.status === 204) {
         setItems((prevItems) => prevItems.filter((item) => item.id !== id));
