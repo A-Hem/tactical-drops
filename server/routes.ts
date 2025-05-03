@@ -847,6 +847,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Order Management routes
+  app.get('/api/admin/orders', isAdminAuthenticated, async (_req: Request, res: Response) => {
+    try {
+      const orders = await storage.getAllOrders();
+      
+      // Enhance orders with item count
+      const ordersWithDetails = await Promise.all(
+        orders.map(async (order) => {
+          const items = await storage.getOrderItems(order.id);
+          const itemCount = items.length;
+          
+          return {
+            ...order,
+            itemCount,
+          };
+        })
+      );
+      
+      return res.json({ orders: ordersWithDetails });
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      return res.status(500).json({ message: 'Failed to fetch orders' });
+    }
+  });
+  
+  app.get('/api/admin/orders/:id', isAdminAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const orderId = parseInt(req.params.id);
+      const order = await storage.getOrder(orderId);
+      
+      if (!order) {
+        return res.status(404).json({ message: 'Order not found' });
+      }
+      
+      const items = await storage.getOrderItems(orderId);
+      
+      // Enhance items with product details
+      const enhancedItems = await Promise.all(
+        items.map(async (item) => {
+          const product = await storage.getProduct(item.productId);
+          return {
+            ...item,
+            product
+          };
+        })
+      );
+      
+      return res.json({ order, items: enhancedItems });
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+      return res.status(500).json({ message: 'Failed to fetch order details' });
+    }
+  });
+  
+  app.put('/api/admin/orders/:id/status', isAdminAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const orderId = parseInt(req.params.id);
+      const { status, paymentId } = req.body;
+      
+      if (!status || !['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'].includes(status)) {
+        return res.status(400).json({ message: 'Invalid order status' });
+      }
+      
+      const updatedOrder = await storage.updateOrderStatus(orderId, status, paymentId);
+      
+      if (!updatedOrder) {
+        return res.status(404).json({ message: 'Order not found' });
+      }
+      
+      return res.json({ order: updatedOrder });
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      return res.status(500).json({ message: 'Failed to update order status' });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

@@ -208,6 +208,13 @@ export class DatabaseStorage implements IStorage {
       .where(eq(orders.userId, userId))
       .orderBy(desc(orders.createdAt));
   }
+  
+  async getAllOrders(): Promise<Order[]> {
+    return await db
+      .select()
+      .from(orders)
+      .orderBy(desc(orders.createdAt));
+  }
 
   async updateOrderStatus(id: number, status: string, paymentId?: string): Promise<Order | undefined> {
     const updateData: Partial<Order> = { status };
