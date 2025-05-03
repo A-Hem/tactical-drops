@@ -139,7 +139,14 @@ export default function AdminOrders() {
     
   // Get counts for tabs
   const getOrderCounts = () => {
-    if (!data?.orders) return { all: 0, pending: 0, processing: 0, shipped: 0 };
+    if (!data?.orders) return { 
+      all: 0, 
+      pending: 0, 
+      processing: 0, 
+      shipped: 0, 
+      delivered: 0, 
+      cancelled: 0 
+    };
     
     const counts = {
       all: data.orders.length,
