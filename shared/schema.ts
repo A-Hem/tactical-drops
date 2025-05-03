@@ -142,6 +142,45 @@ export const insertNewsletterSubscriberSchema = createInsertSchema(newsletterSub
   createdAt: true,
 });
 
+// Blog posts
+export const blogPosts = pgTable("blog_posts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  content: text("content").notNull(),
+  excerpt: text("excerpt"),
+  coverImageUrl: text("cover_image_url"),
+  authorId: integer("author_id").notNull(),
+  published: boolean("published").default(false).notNull(),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Blog categories
+export const blogCategories = pgTable("blog_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+});
+
+export const insertBlogCategorySchema = createInsertSchema(blogCategories).omit({
+  id: true,
+});
+
+// Blog post categories (many-to-many relationship)
+export const blogPostCategories = pgTable("blog_post_categories", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull(),
+  categoryId: integer("category_id").notNull(),
+});
+
 // Export types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -169,3 +208,11 @@ export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
 
 export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
 export type InsertNewsletterSubscriber = z.infer<typeof insertNewsletterSubscriberSchema>;
+
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+
+export type BlogCategory = typeof blogCategories.$inferSelect;
+export type InsertBlogCategory = z.infer<typeof insertBlogCategorySchema>;
+
+export type BlogPostCategory = typeof blogPostCategories.$inferSelect;

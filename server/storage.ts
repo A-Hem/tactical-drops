@@ -8,7 +8,10 @@ import {
   orders, Order, InsertOrder,
   orderItems, OrderItem, InsertOrderItem,
   contactMessages, ContactMessage, InsertContactMessage,
-  newsletterSubscribers, NewsletterSubscriber, InsertNewsletterSubscriber
+  newsletterSubscribers, NewsletterSubscriber, InsertNewsletterSubscriber,
+  blogPosts, BlogPost, InsertBlogPost,
+  blogCategories, BlogCategory, InsertBlogCategory,
+  blogPostCategories, BlogPostCategory
 } from "@shared/schema";
 
 // Storage interface
@@ -67,6 +70,28 @@ export interface IStorage {
   // Newsletter methods
   addNewsletterSubscriber(subscriber: InsertNewsletterSubscriber): Promise<NewsletterSubscriber>;
   getNewsletterSubscriberByEmail(email: string): Promise<NewsletterSubscriber | undefined>;
+  
+  // Blog post methods
+  getBlogPost(id: number): Promise<BlogPost | undefined>;
+  getBlogPostBySlug(slug: string): Promise<BlogPost | undefined>;
+  getAllBlogPosts(publishedOnly?: boolean): Promise<BlogPost[]>;
+  createBlogPost(postData: InsertBlogPost): Promise<BlogPost>;
+  updateBlogPost(id: number, postData: Partial<InsertBlogPost>): Promise<BlogPost | undefined>;
+  deleteBlogPost(id: number): Promise<boolean>;
+  
+  // Blog category methods
+  getBlogCategory(id: number): Promise<BlogCategory | undefined>;
+  getBlogCategoryBySlug(slug: string): Promise<BlogCategory | undefined>;
+  getAllBlogCategories(): Promise<BlogCategory[]>;
+  createBlogCategory(categoryData: InsertBlogCategory): Promise<BlogCategory>;
+  updateBlogCategory(id: number, categoryData: Partial<InsertBlogCategory>): Promise<BlogCategory | undefined>;
+  deleteBlogCategory(id: number): Promise<boolean>;
+  
+  // Blog post category relationship methods
+  addCategoryToBlogPost(postId: number, categoryId: number): Promise<BlogPostCategory>;
+  removeCategoryFromBlogPost(postId: number, categoryId: number): Promise<boolean>;
+  getBlogPostCategories(postId: number): Promise<BlogCategory[]>;
+  getBlogPostsByCategory(categoryId: number, publishedOnly?: boolean): Promise<BlogPost[]>;
 }
 
 // Import the database storage implementation
