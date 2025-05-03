@@ -2,6 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Square payment styles */
+#card-container {
+  margin-top: 0.5rem;
+}
+#card-container .input-container {
+  border-radius: 0.375rem;
+  border: 1px solid hsl(var(--input));
+  padding: 0.5rem;
+  background-color: hsl(var(--card));
+}
+#card-container .input-container.is-focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 1px hsl(var(--primary));
+}
+#card-container .input-container.is-error {
+  border-color: hsl(var(--destructive));
+}
+#card-container .card-field-title {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
 :root {
   --background: 223 14% 10%;
   --foreground: 0 0% 98%;

@@ -157,10 +157,12 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
     setIsLoading(true);
     try {
-      const response = await apiRequest("DELETE", "/api/cart", null, {
+      const response = await fetch("/api/cart", {
+        method: "DELETE",
         headers: {
           "X-Session-ID": sessionId,
         },
+        credentials: "include"
       });
 
       if (response.status === 204) {

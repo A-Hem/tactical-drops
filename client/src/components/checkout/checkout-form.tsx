@@ -95,9 +95,14 @@ const CheckoutForm = () => {
       setIsProcessingPayment(true);
 
       // 1. Create order in our system
-      const orderResponse = await apiRequest("POST", "/api/orders", {
-        ...values,
-        totalAmount: totalPrice,
+      const orderResponse = await apiRequest({
+        url: "/api/orders",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...values,
+          totalAmount: totalPrice,
+        })
       });
 
       if (!orderResponse.ok) {
@@ -247,8 +252,9 @@ const CheckoutForm = () => {
             />
 
             <h2 className="text-2xl font-bold mt-8 mb-6">Payment Information</h2>
-            <div className="border border-border rounded-md p-4 bg-card/50">
-              <div id="card-container" ref={cardContainerRef} className="min-h-[100px]"></div>
+            <div className="border border-border rounded-md p-6 bg-card/50">
+              <p className="text-sm text-muted-foreground mb-4">Enter your credit card information below to complete your purchase.</p>
+              <div id="card-container" ref={cardContainerRef} className="min-h-[120px] transition-colors"></div>
             </div>
 
             <Button
