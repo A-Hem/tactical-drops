@@ -35,7 +35,11 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await apiRequest('/api/auth/status');
+        const response = await apiRequest({
+          url: '/api/auth/status',
+          method: 'GET'
+        });
+        
         if (response.ok) {
           const data = await response.json();
           if (data.isAuthenticated) {
@@ -59,13 +63,14 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     };
 
     checkAuth();
-  }, []);
+  }, [setLocation, toast]);
 
   // Handle logout
   const handleLogout = async () => {
     try {
-      const response = await apiRequest('/api/logout', {
-        method: 'POST',
+      const response = await apiRequest({
+        url: '/api/logout',
+        method: 'POST'
       });
       
       if (response.ok) {

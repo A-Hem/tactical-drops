@@ -6,25 +6,25 @@ import { ShoppingBag, FileText, Tag, MessageSquare } from 'lucide-react';
 
 export default function AdminDashboard() {
   // Products count
-  const { data: productsData } = useQuery({
+  const { data: productsData } = useQuery<{products?: any[]}>({
     queryKey: ['/api/products'],
     enabled: true,
   });
   
   // Categories count
-  const { data: categoriesData } = useQuery({
+  const { data: categoriesData } = useQuery<{categories?: any[]}>({
     queryKey: ['/api/categories'],
     enabled: true,
   });
 
   // Blog posts count
-  const { data: blogPostsData } = useQuery({
+  const { data: blogPostsData } = useQuery<{posts?: any[]}>({
     queryKey: ['/api/blog/posts'],
     enabled: true,
   });
   
   // Blog categories count
-  const { data: blogCategoriesData } = useQuery({
+  const { data: blogCategoriesData } = useQuery<{categories?: any[]}>({
     queryKey: ['/api/blog/categories'],
     enabled: true,
   });
