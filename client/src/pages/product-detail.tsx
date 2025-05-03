@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import Layout from "@/components/layout/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/hooks/use-cart";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, Minus, Plus, Star, StarHalf, ChevronRight } from "lucide-react";
+import { Heart, Minus, Plus, Star, StarHalf, ChevronRight, ShoppingCart, CreditCard } from "lucide-react";
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -15,6 +15,7 @@ export default function ProductDetail() {
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [, setLocation] = useLocation();
 
   const { data, isLoading, error } = useQuery({
     queryKey: [`/api/products/${slug}`],
@@ -84,6 +85,16 @@ export default function ProductDetail() {
       title: "Added to cart",
       description: `${product.name} has been added to your cart.`,
     });
+  };
+  
+  const handleBuyNow = async () => {
+    await addItem({
+      productId: product.id,
+      quantity,
+    });
+    
+    // Navigate to checkout
+    setLocation("/checkout");
   };
 
   const incrementQuantity = () => {
@@ -217,8 +228,8 @@ export default function ProductDetail() {
 
               {/* Add to Cart */}
               <div className="mt-8">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex items-center justify-center border border-border rounded-lg">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-center border border-border rounded-lg w-full sm:w-48">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -249,26 +260,41 @@ export default function ProductDetail() {
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
-                  <Button
-                    className="flex-1 btn-primary"
-                    onClick={handleAddToCart}
-                    disabled={product.inventory <= 0}
-                  >
-                    Add to Cart
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    className="aspect-square"
-                    onClick={() => {
-                      toast({
-                        title: "Feature not available",
-                        description: "Wishlist functionality is coming soon!",
-                      });
-                    }}
-                  >
-                    <Heart className="h-5 w-5" />
-                  </Button>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Button
+                      className="flex-1 btn-primary"
+                      onClick={handleAddToCart}
+                      disabled={product.inventory <= 0}
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Add to Cart
+                    </Button>
+                    
+                    <Button
+                      className="flex-1"
+                      variant="outline"
+                      onClick={handleBuyNow}
+                      disabled={product.inventory <= 0}
+                    >
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Buy Now
+                    </Button>
+                    
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="aspect-square hidden sm:flex"
+                      onClick={() => {
+                        toast({
+                          title: "Feature not available",
+                          description: "Wishlist functionality is coming soon!",
+                        });
+                      }}
+                    >
+                      <Heart className="h-5 w-5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
 

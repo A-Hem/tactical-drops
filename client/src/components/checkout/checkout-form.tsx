@@ -124,7 +124,22 @@ const CheckoutForm = () => {
         throw new Error(paymentResult.error || "Payment processing failed");
       }
 
-      // 3. Success - clear cart and navigate to success page
+      // 3. Update the order with payment information
+      const paymentId = paymentResult.paymentId || '';
+      const updateOrderResponse = await fetch(`/api/orders/${orderId}/payment`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "paid",
+          paymentId,
+        }),
+      });
+
+      if (!updateOrderResponse.ok) {
+        console.error("Failed to update order with payment information");
+      }
+
+      // 4. Success - clear cart and navigate to confirmation page
       clearCart();
       
       toast({
@@ -132,8 +147,8 @@ const CheckoutForm = () => {
         description: "Your order has been successfully placed.",
       });
 
-      // Navigate to a success page
-      navigate(`/order-confirmation?orderId=${orderId}`);
+      // Navigate to confirmation page with order ID
+      navigate(`/order-confirmation?orderId=${orderId}&success=true`);
     } catch (error: any) {
       toast({
         title: "Checkout Error",
