@@ -19,6 +19,9 @@ import NotFound from "@/pages/not-found";
 // Admin pages
 import AdminLogin from "@/pages/admin/login";
 import AdminDashboard from "@/pages/admin/dashboard";
+import AdminProducts from "@/pages/admin/products";
+import AdminNewProduct from "@/pages/admin/products/new";
+import AdminEditProduct from "@/pages/admin/products/edit/[id]";
 
 function Router() {
   return (
@@ -36,6 +39,9 @@ function Router() {
       {/* Admin routes */}
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
+      <Route path="/admin/products" component={AdminProducts} />
+      <Route path="/admin/products/new" component={AdminNewProduct} />
+      <Route path="/admin/products/edit/:id" component={AdminEditProduct} />
       
       {/* 404 route */}
       <Route component={NotFound} />

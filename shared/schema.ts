@@ -16,7 +16,6 @@ export const users = pgTable("users", {
 
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
-  isAdmin: true,
 });
 
 // Product model

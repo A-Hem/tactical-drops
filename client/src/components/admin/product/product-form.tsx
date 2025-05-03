@@ -67,7 +67,7 @@ export default function ProductForm({ productId }: ProductFormProps) {
   });
 
   // If editing, fetch product data
-  const { data: productData, isLoading: isLoadingProduct } = useQuery({
+  const { data: productData, isLoading: isLoadingProduct } = useQuery<{product?: any}>({
     queryKey: ['/api/products', productId],
     enabled: !!productId,
   });
