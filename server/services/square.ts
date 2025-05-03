@@ -55,14 +55,23 @@ export const squareService = {
       // Handle errors with a more generic approach
       const squareError = error as any;
       
-      if (squareError && 
-          typeof squareError === 'object' && 
-          squareError.result && 
-          Array.isArray(squareError.result.errors)) {
-        return {
-          success: false,
-          error: squareError.result.errors[0]?.detail || "Payment processing failed"
-        };
+      // Check for Square API errors
+      if (squareError && typeof squareError === 'object') {
+        // New Square SDK error format
+        if (squareError.errors && Array.isArray(squareError.errors)) {
+          return {
+            success: false,
+            error: squareError.errors[0]?.detail || "Payment processing failed"
+          };
+        }
+        
+        // Legacy format or other structured error
+        if (squareError.result && squareError.result.errors && Array.isArray(squareError.result.errors)) {
+          return {
+            success: false,
+            error: squareError.result.errors[0]?.detail || "Payment processing failed"
+          };
+        }
       }
       
       return {

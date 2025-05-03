@@ -27,11 +27,14 @@ export async function initializeSquarePayment(elementId: string): Promise<any> {
   }
 
   try {
-    const payments = window.Square.payments(
-      import.meta.env.VITE_SQUARE_APPLICATION_ID || process.env.SQUARE_APPLICATION_ID, 
-      import.meta.env.VITE_SQUARE_LOCATION_ID || process.env.SQUARE_LOCATION_ID
-    );
-
+    const appId = import.meta.env.VITE_SQUARE_APPLICATION_ID || process.env.SQUARE_APPLICATION_ID;
+    
+    if (!appId) {
+      throw new Error("Square Application ID is not configured");
+    }
+    
+    const payments = window.Square.payments(appId);
+    
     const card = await payments.card();
     await card.attach(`#${elementId}`);
     
@@ -51,15 +54,18 @@ export async function processPayment(
     
     if (result.status === "OK") {
       // Send the token to the server to process the payment
-      const response = await apiRequest(
-        "PUT",
-        `/api/orders/${options.orderId}/payment`,
-        {
-          paymentId: result.token,
-          amount: options.amount,
-          currencyCode: options.currencyCode
-        }
-      );
+      const paymentData = {
+        paymentId: result.token,
+        amount: options.amount,
+        currencyCode: options.currencyCode
+      };
+      
+      const response = await fetch(`/api/orders/${options.orderId}/payment`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(paymentData),
+        credentials: "include"
+      });
       
       if (response.ok) {
         const data = await response.json();
