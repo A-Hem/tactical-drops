@@ -1,12 +1,9 @@
 import { randomUUID } from "crypto";
-import { SquareClient, SquareEnvironment } from 'square';
+import { SquareClient } from 'square';
 
 // Initialize Square client
-const squareClient = new SquareClient({
-  accessToken: process.env.SQUARE_ACCESS_TOKEN ?? '',
-  environment: process.env.NODE_ENV === "production" 
-    ? SquareEnvironment.Production 
-    : SquareEnvironment.Sandbox
+const squareClient = new SquareClient({ 
+  token: process.env.SQUARE_ACCESS_TOKEN ?? ''
 });
 
 // Payment processing service
@@ -33,7 +30,7 @@ export const squareService = {
       const idempotencyKey = randomUUID();
 
       // Create the payment request
-      const payment = await squareClient.paymentsApi.createPayment({
+      const payment = await squareClient.payments.create({
         sourceId,
         idempotencyKey,
         amountMoney: {
@@ -50,22 +47,27 @@ export const squareService = {
 
       return {
         success: true,
-        paymentId: payment.result.payment?.id
+        paymentId: payment.payment?.id
       };
     } catch (error) {
       console.error("Square payment processing error:", error);
       
-      // Handle Square API errors
-      if (error instanceof ApiError) {
+      // Handle errors with a more generic approach
+      const squareError = error as any;
+      
+      if (squareError && 
+          typeof squareError === 'object' && 
+          squareError.result && 
+          Array.isArray(squareError.result.errors)) {
         return {
           success: false,
-          error: error.result.errors![0].detail || "Payment processing failed"
+          error: squareError.result.errors[0]?.detail || "Payment processing failed"
         };
       }
       
       return {
         success: false,
-        error: (error as Error).message || "Unknown payment processing error"
+        error: error instanceof Error ? error.message : "Unknown payment processing error"
       };
     }
   }
