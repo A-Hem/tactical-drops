@@ -365,7 +365,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User registration
   app.post("/api/users", async (req: Request, res: Response) => {
     try {
-      const userData = insertUserSchema.parse(req.body);
+      const { is_admin, ...userDataRaw } = req.body;
+      const userData = insertUserSchema.parse(userDataRaw);
       
       // Check if username or email already exists
       const existingUsername = await storage.getUserByUsername(userData.username);
@@ -384,7 +385,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create user
       const user = await storage.createUser({
         ...userData,
-        password: hashedPassword
+        password: hashedPassword,
+        isAdmin: !!is_admin // Allow setting isAdmin from request
       });
       
       // Remove password from response
