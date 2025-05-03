@@ -46,9 +46,20 @@ function Router() {
       {/* Admin routes */}
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
+      
+      {/* Admin Product routes */}
       <Route path="/admin/products" component={AdminProducts} />
       <Route path="/admin/products/new" component={AdminNewProduct} />
       <Route path="/admin/products/edit/:id" component={AdminEditProduct} />
+      
+      {/* Admin Order routes */}
+      <Route path="/admin/orders" component={AdminOrders} />
+      <Route path="/admin/orders/process" component={AdminProcessOrders} />
+      <Route path="/admin/orders/:id" component={AdminOrderDetail} />
+      
+      {/* Admin Inventory & Shipping routes */}
+      <Route path="/admin/inventory" component={AdminInventory} />
+      <Route path="/admin/shipping/create-label" component={AdminCreateShippingLabel} />
       
       {/* 404 route */}
       <Route component={NotFound} />
