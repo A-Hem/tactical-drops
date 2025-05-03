@@ -1,23 +1,21 @@
-import { 
-  users, products, productImages, productSpecifications, 
-  categories, cartItems, orders, orderItems, 
-  contactMessages, newsletterSubscribers, blogPosts, blogCategories, blogPostCategories,
-  type User, type InsertUser,
-  type Product, type InsertProduct,
-  type ProductSpecification, type ProductImage,
-  type Category, type InsertCategory,
-  type CartItem, type InsertCartItem,
-  type Order, type InsertOrder,
-  type OrderItem, type InsertOrderItem,
-  type ContactMessage, type InsertContactMessage,
-  type NewsletterSubscriber, type InsertNewsletterSubscriber,
-  type BlogPost, type InsertBlogPost,
-  type BlogCategory, type InsertBlogCategory,
-  type BlogPostCategory
+import { eq, and, desc, sql, asc, like, or, ne, gt, lt, gte, lte, isNull, isNotNull } from 'drizzle-orm';
+import { db } from './db';
+import { IStorage } from './storage';
+import {
+  users, User, InsertUser,
+  products, Product, InsertProduct,
+  productSpecifications, ProductSpecification,
+  productImages, ProductImage,
+  categories, Category, InsertCategory,
+  cartItems, CartItem, InsertCartItem,
+  orders, Order, InsertOrder,
+  orderItems, OrderItem, InsertOrderItem,
+  contactMessages, ContactMessage, InsertContactMessage,
+  newsletterSubscribers, NewsletterSubscriber, InsertNewsletterSubscriber,
+  blogPosts, BlogPost, InsertBlogPost,
+  blogCategories, BlogCategory, InsertBlogCategory,
+  blogPostCategories, BlogPostCategory
 } from "@shared/schema";
-import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
-import { IStorage } from "./storage";
 
 export class DatabaseStorage implements IStorage {
   // User methods
@@ -105,11 +103,7 @@ export class DatabaseStorage implements IStorage {
   async addProductImage(image: { productId: number; url: string; isMain?: boolean }): Promise<ProductImage> {
     const [productImage] = await db
       .insert(productImages)
-      .values({
-        productId: image.productId,
-        url: image.url,
-        isMain: image.isMain || false
-      })
+      .values(image)
       .returning();
     return productImage;
   }
@@ -146,12 +140,10 @@ export class DatabaseStorage implements IStorage {
     const [item] = await db
       .select()
       .from(cartItems)
-      .where(
-        and(
-          eq(cartItems.sessionId, sessionId),
-          eq(cartItems.productId, productId)
-        )
-      );
+      .where(and(
+        eq(cartItems.sessionId, sessionId),
+        eq(cartItems.productId, productId)
+      ));
     return item;
   }
 
@@ -186,14 +178,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Order methods
-  async createOrder(orderData: InsertOrder): Promise<Order> {
-    const [order] = await db.insert(orders).values({
-      ...orderData,
-      createdAt: new Date(),
-      status: orderData.status || 'pending',
-      paymentId: orderData.paymentId || null
-    }).returning();
-    return order;
+  async createOrder(order: InsertOrder): Promise<Order> {
+    const [newOrder] = await db.insert(orders).values(order).returning();
+    return newOrder;
   }
 
   async getOrder(id: number): Promise<Order | undefined> {
