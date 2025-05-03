@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
@@ -8,10 +8,14 @@ import {
   insertOrderSchema, 
   insertContactMessageSchema, 
   insertNewsletterSubscriberSchema,
-  insertUserSchema
+  insertUserSchema,
+  insertBlogPostSchema,
+  insertBlogCategorySchema
 } from "@shared/schema";
 import { z, ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
+import passport from "passport";
+import bcrypt from "bcryptjs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up API routes
@@ -20,7 +24,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Product routes
   app.get("/api/products", async (req: Request, res: Response) => {
     try {
-      let products;
+      let products: any[] = [];
       const categorySlug = req.query.category as string | undefined;
       const featured = req.query.featured === "true";
       
@@ -28,8 +32,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const category = await storage.getCategoryBySlug(categorySlug);
         if (category) {
           products = await storage.getProductsByCategory(category.id);
-        } else {
-          products = [];
         }
       } else if (featured) {
         products = await storage.getFeaturedProducts();
@@ -149,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Update quantity if item exists
         const updatedItem = await storage.updateCartItemQuantity(
           existingItem.id,
-          existingItem.quantity + validatedItem.quantity
+          existingItem.quantity + (validatedItem.quantity || 1)
         );
         
         return res.json({ item: updatedItem });
@@ -376,8 +378,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(409).json({ message: "Email already registered" });
       }
       
+      // Hash password before storing
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      
       // Create user
-      const user = await storage.createUser(userData);
+      const user = await storage.createUser({
+        ...userData,
+        password: hashedPassword
+      });
       
       // Remove password from response
       const { password, ...userWithoutPassword } = user;
@@ -391,6 +399,285 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       res.status(500).json({ message: "Error registering user" });
+    }
+  });
+  
+  // Authentication routes
+  app.post('/api/login', (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate('local', (err: any, user: any, info: any) => {
+      if (err) {
+        return next(err);
+      }
+      if (!user) {
+        return res.status(401).json({ 
+          message: 'Authentication failed', 
+          details: info?.message || 'Invalid credentials' 
+        });
+      }
+      req.login(user, (err) => {
+        if (err) {
+          return next(err);
+        }
+        // Exclude password from response
+        const { password, ...userWithoutPassword } = user;
+        return res.json({ 
+          user: userWithoutPassword,
+          message: 'Login successful' 
+        });
+      });
+    })(req, res, next);
+  });
+  
+  app.post('/api/logout', (req: Request, res: Response) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ message: 'Error during logout' });
+      }
+      res.json({ message: 'Logout successful' });
+    });
+  });
+  
+  // Check auth status
+  app.get('/api/auth/status', (req: Request, res: Response) => {
+    if (req.isAuthenticated() && req.user) {
+      // Exclude password from response
+      const user = req.user as any;
+      const { password, ...userWithoutPassword } = user;
+      
+      return res.json({ 
+        isAuthenticated: true, 
+        user: userWithoutPassword 
+      });
+    }
+    res.json({ 
+      isAuthenticated: false 
+    });
+  });
+  
+  // Middleware to check if user is authenticated and is admin
+  const isAdminAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+    if (req.isAuthenticated() && (req.user as any)?.isAdmin) {
+      return next();
+    }
+    res.status(401).json({ message: 'Unauthorized' });
+  };
+  
+  // Blog routes (protected admin routes)
+  // Get all blog posts
+  app.get('/api/blog/posts', async (req: Request, res: Response) => {
+    try {
+      const publishedOnly = req.query.published === 'true';
+      // If admin is authenticated, show all posts, otherwise only show published posts
+      const isAdmin = req.isAuthenticated() && (req.user as any)?.isAdmin;
+      const posts = await storage.getAllBlogPosts(isAdmin ? false : true);
+      res.json({ posts });
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching blog posts' });
+    }
+  });
+  
+  // Get single blog post by slug
+  app.get('/api/blog/posts/:slug', async (req: Request, res: Response) => {
+    try {
+      const { slug } = req.params;
+      const post = await storage.getBlogPostBySlug(slug);
+      
+      if (!post) {
+        return res.status(404).json({ message: 'Blog post not found' });
+      }
+      
+      // If not published and user is not admin, return 404
+      if (!post.published && !(req.isAuthenticated() && (req.user as any)?.isAdmin)) {
+        return res.status(404).json({ message: 'Blog post not found' });
+      }
+      
+      const categories = await storage.getBlogPostCategories(post.id);
+      
+      res.json({ post, categories });
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching blog post' });
+    }
+  });
+  
+  // Admin blog routes
+  // Create blog post
+  app.post('/api/admin/blog/posts', isAdminAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const postData = insertBlogPostSchema.parse(req.body);
+      const post = await storage.createBlogPost(postData);
+      
+      // Add categories
+      if (req.body.categoryIds && Array.isArray(req.body.categoryIds)) {
+        for (const categoryId of req.body.categoryIds) {
+          await storage.addCategoryToBlogPost(post.id, Number(categoryId));
+        }
+      }
+      
+      res.status(201).json({ post });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ 
+          message: 'Invalid input', 
+          errors: fromZodError(error).message 
+        });
+      }
+      res.status(500).json({ message: 'Error creating blog post' });
+    }
+  });
+  
+  // Update blog post
+  app.put('/api/admin/blog/posts/:id', isAdminAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const postId = Number(id);
+      
+      // Check if post exists
+      const existingPost = await storage.getBlogPost(postId);
+      if (!existingPost) {
+        return res.status(404).json({ message: 'Blog post not found' });
+      }
+      
+      // Update post data
+      const updatedPost = await storage.updateBlogPost(postId, req.body);
+      
+      // Update categories if provided
+      if (req.body.categoryIds && Array.isArray(req.body.categoryIds)) {
+        // Get current categories
+        const currentCategories = await storage.getBlogPostCategories(postId);
+        const currentCategoryIds = currentCategories.map(c => c.id);
+        
+        // Add new categories
+        for (const categoryId of req.body.categoryIds) {
+          if (!currentCategoryIds.includes(Number(categoryId))) {
+            await storage.addCategoryToBlogPost(postId, Number(categoryId));
+          }
+        }
+        
+        // Remove categories that are no longer associated
+        for (const category of currentCategories) {
+          if (!req.body.categoryIds.includes(category.id)) {
+            await storage.removeCategoryFromBlogPost(postId, category.id);
+          }
+        }
+      }
+      
+      res.json({ post: updatedPost });
+    } catch (error) {
+      res.status(500).json({ message: 'Error updating blog post' });
+    }
+  });
+  
+  // Delete blog post
+  app.delete('/api/admin/blog/posts/:id', isAdminAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteBlogPost(Number(id));
+      
+      if (!deleted) {
+        return res.status(404).json({ message: 'Blog post not found' });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: 'Error deleting blog post' });
+    }
+  });
+  
+  // Blog category routes
+  // Get all blog categories
+  app.get('/api/blog/categories', async (_req: Request, res: Response) => {
+    try {
+      const categories = await storage.getAllBlogCategories();
+      res.json({ categories });
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching blog categories' });
+    }
+  });
+  
+  // Get blog posts by category
+  app.get('/api/blog/categories/:slug', async (req: Request, res: Response) => {
+    try {
+      const { slug } = req.params;
+      const category = await storage.getBlogCategoryBySlug(slug);
+      
+      if (!category) {
+        return res.status(404).json({ message: 'Blog category not found' });
+      }
+      
+      // If admin is authenticated, show all posts, otherwise only show published posts
+      const isAdmin = req.isAuthenticated() && (req.user as any)?.isAdmin;
+      const posts = await storage.getBlogPostsByCategory(category.id, isAdmin ? false : true);
+      
+      res.json({ category, posts });
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching blog category' });
+    }
+  });
+  
+  // Admin blog category routes
+  // Create blog category
+  app.post('/api/admin/blog/categories', isAdminAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const categoryData = insertBlogCategorySchema.parse(req.body);
+      
+      // Check if slug already exists
+      const existingCategory = await storage.getBlogCategoryBySlug(categoryData.slug);
+      if (existingCategory) {
+        return res.status(409).json({ message: 'Category slug already exists' });
+      }
+      
+      const category = await storage.createBlogCategory(categoryData);
+      res.status(201).json({ category });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ 
+          message: 'Invalid input', 
+          errors: fromZodError(error).message 
+        });
+      }
+      res.status(500).json({ message: 'Error creating blog category' });
+    }
+  });
+  
+  // Update blog category
+  app.put('/api/admin/blog/categories/:id', isAdminAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      
+      // Check if category exists
+      const existingCategory = await storage.getBlogCategory(Number(id));
+      if (!existingCategory) {
+        return res.status(404).json({ message: 'Blog category not found' });
+      }
+      
+      // If slug is being changed, check if new slug already exists
+      if (req.body.slug && req.body.slug !== existingCategory.slug) {
+        const categoryWithSlug = await storage.getBlogCategoryBySlug(req.body.slug);
+        if (categoryWithSlug && categoryWithSlug.id !== Number(id)) {
+          return res.status(409).json({ message: 'Category slug already exists' });
+        }
+      }
+      
+      const updatedCategory = await storage.updateBlogCategory(Number(id), req.body);
+      res.json({ category: updatedCategory });
+    } catch (error) {
+      res.status(500).json({ message: 'Error updating blog category' });
+    }
+  });
+  
+  // Delete blog category
+  app.delete('/api/admin/blog/categories/:id', isAdminAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteBlogCategory(Number(id));
+      
+      if (!deleted) {
+        return res.status(404).json({ message: 'Blog category not found' });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: 'Error deleting blog category' });
     }
   });
 

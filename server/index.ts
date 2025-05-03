@@ -2,10 +2,71 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedDatabase } from "./initial-data";
+import session from "express-session";
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import bcrypt from "bcryptjs";
+import { storage } from "./storage";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Configure session
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'justdrops-session-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: app.get('env') === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// Initialize Passport and restore authentication state from session
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Configure Passport to use local strategy
+passport.use(new LocalStrategy(async (username, password, done) => {
+  try {
+    // Find user by username
+    const user = await storage.getUserByUsername(username);
+    if (!user) {
+      return done(null, false, { message: 'Incorrect username' });
+    }
+    
+    // Verify password
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+      return done(null, false, { message: 'Incorrect password' });
+    }
+    
+    // Check if user is admin (only admins can access admin panel)
+    if (!user.isAdmin) {
+      return done(null, false, { message: 'Not authorized' });
+    }
+    
+    return done(null, user);
+  } catch (error) {
+    return done(error);
+  }
+}));
+
+// Serialize user to session
+passport.serializeUser((user: any, done) => {
+  done(null, user.id);
+});
+
+// Deserialize user from session
+passport.deserializeUser(async (id: number, done) => {
+  try {
+    const user = await storage.getUser(id);
+    done(null, user);
+  } catch (error) {
+    done(error);
+  }
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
