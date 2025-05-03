@@ -1,12 +1,12 @@
-import * as Square from "square";
 import { randomUUID } from "crypto";
+import { SquareClient, SquareEnvironment } from 'square';
 
 // Initialize Square client
-const squareClient = new Client({
-  accessToken: process.env.SQUARE_ACCESS_TOKEN,
+const squareClient = new SquareClient({
+  accessToken: process.env.SQUARE_ACCESS_TOKEN ?? '',
   environment: process.env.NODE_ENV === "production" 
-    ? Environment.Production 
-    : Environment.Sandbox
+    ? SquareEnvironment.Production 
+    : SquareEnvironment.Sandbox
 });
 
 // Payment processing service
