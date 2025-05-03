@@ -28,8 +28,8 @@ export async function initializeSquarePayment(elementId: string): Promise<any> {
 
   try {
     const payments = window.Square.payments(
-      process.env.SQUARE_APPLICATION_ID || import.meta.env.VITE_SQUARE_APPLICATION_ID || "sandbox-sq0idb-IXE89vgaqODsZn-RA89Hgw", 
-      process.env.SQUARE_LOCATION_ID || import.meta.env.VITE_SQUARE_LOCATION_ID || "LYX0XVHJ35MMZ"
+      import.meta.env.VITE_SQUARE_APPLICATION_ID || process.env.SQUARE_APPLICATION_ID, 
+      import.meta.env.VITE_SQUARE_LOCATION_ID || process.env.SQUARE_LOCATION_ID
     );
 
     const card = await payments.card();
