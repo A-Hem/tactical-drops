@@ -301,13 +301,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { paymentId } = req.body;
       
       if (!paymentId) {
-        return res.status(400).json({ message: "Payment ID required" });
+        return res.status(400).json({ message: "Payment token required" });
       }
       
+      // Get the order to retrieve customer email
+      const order = await storage.getOrder(Number(id));
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+      
+      // Import the Square service
+      const { squareService } = await import('./services/square');
+      
+      // Process the payment with Square
+      const paymentResult = await squareService.processPayment(
+        paymentId,
+        Number(order.totalAmount),
+        order.id,
+        order.email
+      );
+      
+      if (!paymentResult.success) {
+        return res.status(400).json({ 
+          message: "Payment processing failed",
+          error: paymentResult.error 
+        });
+      }
+      
+      // Update the order status in the database
       const updatedOrder = await storage.updateOrderStatus(
         Number(id),
         "paid",
-        paymentId
+        paymentResult.paymentId
       );
       
       if (!updatedOrder) {
@@ -316,7 +341,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ order: updatedOrder });
     } catch (error) {
-      res.status(500).json({ message: "Error updating order payment" });
+      console.error("Payment processing error:", error);
+      res.status(500).json({ message: "Error processing payment" });
     }
   });
 

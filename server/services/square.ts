@@ -1,4 +1,4 @@
-import { Client, Environment, ApiError } from "square";
+import * as Square from "square";
 import { randomUUID } from "crypto";
 
 // Initialize Square client
