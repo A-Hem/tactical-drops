@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { CartProvider } from "@/hooks/use-cart";
 
+// Store pages
 import Home from "@/pages/home";
 import Products from "@/pages/products";
 import ProductDetail from "@/pages/product-detail";
@@ -15,9 +16,14 @@ import About from "@/pages/about";
 import Contact from "@/pages/contact";
 import NotFound from "@/pages/not-found";
 
+// Admin pages
+import AdminLogin from "@/pages/admin/login";
+import AdminDashboard from "@/pages/admin/dashboard";
+
 function Router() {
   return (
     <Switch>
+      {/* Store routes */}
       <Route path="/" component={Home} />
       <Route path="/products" component={Products} />
       <Route path="/products/category/:slug" component={Products} />
@@ -26,6 +32,12 @@ function Router() {
       <Route path="/checkout" component={Checkout} />
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />
+      
+      {/* Admin routes */}
+      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin/dashboard" component={AdminDashboard} />
+      
+      {/* 404 route */}
       <Route component={NotFound} />
     </Switch>
   );
