@@ -1,11 +1,12 @@
 steps:
-  # Build the container image
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/tactical-drops-app', '.']
-  
-  # Push the container image to Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/tactical-drops-app']
+  # Build and push using Cloud Native Buildpacks
+  - name: 'gcr.io/k8s-skaffold/pack'
+    entrypoint: 'pack'
+    args:
+      - 'build'
+      - 'gcr.io/$PROJECT_ID/tactical-drops'
+      - '--builder=gcr.io/buildpacks/builder:v1'
+      - '--publish'
   
   # Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -15,7 +16,7 @@ steps:
       - 'deploy'
       - 'tactical-drops'
       - '--image'
-      - 'gcr.io/$PROJECT_ID/tactical-drops-app'
+      - 'gcr.io/$PROJECT_ID/tactical-drops'
       - '--platform'
       - 'managed'
       - '--region'
@@ -30,6 +31,6 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 images:
-  - 'gcr.io/$PROJECT_ID/tactical-drops-app'
+  - 'gcr.io/$PROJECT_ID/tactical-drops'
 
 timeout: '1800s' 

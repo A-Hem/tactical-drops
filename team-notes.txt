@@ -98,3 +98,47 @@ See cloud-run-setup.md for detailed instructions on:
 - The DATABASE_URL format for Cloud SQL: `postgresql://user:password@/database?host=/cloudsql/project:region:instance`
 - Ensure secrets are properly set up in Secret Manager before deployment
 - All Replit-specific configurations have been removed from the project 
+
+
+
+
+Cloud Assist preview
+whats wrong w my website not buidling properly , heres my yaml gcloud builds submit --config=cloudbuild.yaml
+Okay, I can help you troubleshoot your website build issues when using gcloud builds submit --config=cloudbuild.yaml . To best assist you, I need more information. However, I can provide some common reasons why builds fail and how to check for them:
+
+1. Permissions Issues:
+
+Cloud Build Service Account: The Cloud Build service account needs the correct IAM permissions. Ensure it has roles like "Cloud Build Service Account" and any other roles required to access resources like Cloud Storage buckets or other services your build uses. If you're deploying to App Engine, the service account may need the "App Engine Admin" and "Service Account User" roles.
+User Permissions: If you're running manual builds, your user account needs the "Project Viewer" role, in addition to "Cloud Build Editor."
+2. Problems with your cloudbuild.yaml :
+
+File Location: If your cloudbuild.yaml file is not in the root directory of your repository, you may need to specify the correct working directory using the dir parameter within your build steps.
+Syntax Errors: YAML files are sensitive to indentation. Double-check your indentation and syntax.
+Missing app.yaml : If you're deploying to App Engine, make sure you have an app.yaml file in the root directory (or the directory you specify in your build steps).
+Incorrect Arguments: Review the arguments you're passing to your build steps (e.g., in npm run build ).
+Substitution Variables: If you're using substitution variables, ensure they are correctly defined and that you are passing them correctly. If you invoke your build with a trigger, the ALLOW_LOOSE option is set by default. In this case, your build will not return an error if there is a missing substitution variable or a missing substitution. You cannot override the ALLOW_LOOSE option for builds invoked by triggers. When you use gcloud builds submit , the ALLOW_LOOSE option is not set by default.
+Incorrect Indentation : Check your YAML indentation as it is very important.
+3. Source Code Issues:
+
+Missing Build Config File: Your repository may not contain a build config file.
+Clean Working Tree: If the source location you specified does not have anything new to commit and the working tree is clean, this may cause a client error.
+4. Dependency Issues:
+
+Missing Modules: If your build fails with an error like "Cannot find module," it usually means a required Node.js module is missing. Try reinstalling or updating your modules.
+5. Google Cloud Build timeout:
+
+The default timeout is 10 minutes which can be customized.
+How to Diagnose:
+
+Check Cloud Build Logs: The most important step is to examine the Cloud Build logs in the Google Cloud Console. These logs will usually provide specific error messages that pinpoint the problem.
+Test Locally: Try running the build commands locally (e.g., npm run build ) to see if you can reproduce the error.
+To help me give you more specific advice, please provide the following:
+
+The full error message from the Cloud Build logs.
+Your cloudbuild.yaml file.
+Your app.yaml file (if you're deploying to App Engine).
+Details about your website framework (e.g., React, Angular, Vue.js, plain HTML/CSS/JavaScript).
+Source:
+
+https://cloud.google.com/build/docs/build-config-file-schema 
+URL not found appears when try to deploy with cloud build 
