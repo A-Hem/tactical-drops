@@ -22,7 +22,8 @@ import {
   XCircle, 
   CheckCircle, 
   AlertTriangle,
-  RefreshCcw,
+  ArrowLeft,
+  RefreshCcw,  
   ShoppingBag,
   ArrowUpDown,
   Check
@@ -35,6 +36,7 @@ export default function AdminProcessOrders() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLabelDialogOpen, setIsLabelDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Fetch orders from API
   const { data, isLoading, error, refetch } = useQuery({
@@ -164,6 +166,11 @@ export default function AdminProcessOrders() {
     return data.orders.filter((order: any) => order.status === status).length;
   };
 
+  // Toggle sort direction
+  const handleSort = () => {
+    setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+  };
+
   if (isLoading) {
     return (
       <AdminLayout title="Process Orders">
@@ -174,7 +181,7 @@ export default function AdminProcessOrders() {
               variant="outline"
               size="sm"
             >
-              <ChevronLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Orders
             </Button>
           </div>
@@ -225,7 +232,7 @@ export default function AdminProcessOrders() {
             variant="outline"
             size="sm"
           >
-            <ChevronLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Orders
           </Button>
           
@@ -310,7 +317,14 @@ export default function AdminProcessOrders() {
                           aria-label="Select all"
                         />
                       </TableHead>
-                      <TableHead>Order Info</TableHead>
+                      <TableHead className="cursor-pointer select-none" onClick={handleSort}>
+                        <div className="flex items-center">
+                          Order Info
+                          <ArrowUpDown className="ml-2 h-4 w-4" />
+                          {sortDirection === 'asc' ? <ArrowUp className="ml-1 h-4 w-4" /> : <ArrowDown className="ml-1 h-4 w-4" />}
+                        </div>
+                      </TableHead>
+
                       <TableHead>Customer</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Items</TableHead>
@@ -329,7 +343,13 @@ export default function AdminProcessOrders() {
                           />
                         </TableCell>
                         <TableCell>
-                          <div className="font-medium">#{order.id}</div>
+                          <div className="font-medium">
+                            #{order.id}
+                            {/* Display customer name on smaller screens */}
+                            <span className="sm:hidden ml-2 text-xs text-muted-foreground">
+                              ({order.fullName})
+                            </span>
+                          </div>
                           <div className="text-xs text-muted-foreground mt-1">
                             {order.paymentId ? 
                               <Badge variant="outline" className="text-xs bg-green-500/10 text-green-500">
@@ -397,7 +417,7 @@ export default function AdminProcessOrders() {
               </div>
             </CardContent>
             <CardFooter className="border-t pt-4 flex justify-between">
-              <Button variant="outline" size="sm" onClick={() => setSelectedOrders([])}>
+              <Button variant="outline" size="sm" onClick={() => setSelectedOrders([])} disabled={isProcessing}>
                 Clear Selection
               </Button>
               <div className="flex gap-2">

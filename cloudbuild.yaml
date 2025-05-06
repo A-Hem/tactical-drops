@@ -5,7 +5,7 @@ steps:
     args:
       - 'build'
       - 'gcr.io/$PROJECT_ID/tactical-drops'
-      - '--builder=gcr.io/buildpacks/builder:v1'
+      - '--builder=gcr.io/serverless-runtimes/google-22-full/builder/nodejs:latest'
       - '--publish'
   
   # Deploy container image to Cloud Run
@@ -33,4 +33,4 @@ options:
 images:
   - 'gcr.io/$PROJECT_ID/tactical-drops'
 
-timeout: '1800s' 
+timeout: '1800s'
