@@ -9,12 +9,36 @@ vite.config.ts.*
 .env
 .env.local
 .env.*.local
+.env.development
+.env.test
+.env.production
+
+# Secrets and keys
+*.pem
+*.key
+*secret*
+*password*
+tactical-drops-key.json
+*credentials*
+*.keystore
+*.p12
+*.pfx
 
 # Docker
 .dockerignore
+Dockerfile.dev
 
 # Google Cloud
 .gcloudignore
+app.yaml
+cloud-build-local*
+
+# IDE and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 
 # Replit (no longer needed)
 .replit
@@ -25,3 +49,26 @@ vite.config.ts.*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.cache/
+coverage/
+build/
+dist/
+tmp/
+
+# Local development
+*.local
+local.*
+dev.*
+
+# Database
+*.sqlite
+*.db
+dump.sql
+*.dump
+
+# Misc
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+*.temp
