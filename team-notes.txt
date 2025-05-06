@@ -1,0 +1,100 @@
+# Tactical Drops - Migration from Replit to Google Cloud/Cloud Run
+
+## Project Structure Overview
+- Node.js/Express application using TypeScript
+- React frontend with Tailwind CSS, Radix UI components
+- PostgreSQL database with Drizzle ORM
+- Authentication using Passport.js
+- Payment processing with Square
+- Vite for frontend bundling
+- Express server serving both API and static files
+
+## Current Dependencies
+- Node.js 20
+- PostgreSQL 16
+- Express.js for backend
+- React 18 for frontend
+- Drizzle ORM for database
+- Passport.js for authentication
+- Square SDK for payments
+- Tailwind CSS with various UI component libraries
+
+## Migration Tasks
+1. ✅ Review current configuration and dependencies
+2. ✅ Set up Google Cloud project
+3. ✅ Create Cloud SQL PostgreSQL instance
+4. ✅ Modify database connection to use Cloud SQL
+5. ✅ Set up environment variables in Google Cloud
+6. ✅ Configure Dockerfile for Cloud Run
+7. ✅ Update scripts for Google Cloud deployment
+8. ✅ Create CI/CD with Cloud Build
+9. ✅ Remove Replit-specific code and configurations
+10. Deploy to Cloud Run
+11. Test deployed application
+
+## Changes Made
+1. ✅ Created Dockerfile for containerization
+2. ✅ Created .dockerignore to optimize builds
+3. ✅ Updated server/index.ts to use PORT environment variable
+4. ✅ Enhanced drizzle.config.ts for better Cloud SQL compatibility
+5. ✅ Created cloud-run-setup.md with detailed deployment instructions
+6. ✅ Created cloudbuild.yaml for CI/CD with Cloud Build
+7. ✅ Created .gcloudignore file for Google Cloud deployments
+8. ✅ Updated package.json to remove Replit dependencies
+9. ✅ Updated vite.config.ts to remove Replit plugins
+10. ✅ Updated .gitignore with Cloud-specific entries
+
+## Cleanup Tasks Completed
+1. ✅ Removed Replit plugins from vite.config.ts
+2. ✅ Removed Replit dependencies from package.json
+3. ✅ Updated project name in package.json
+4. ✅ Added .gcloudignore file
+5. ✅ Added Docker and Cloud entries to .gitignore
+
+## Local Development Instructions
+
+### Prerequisites
+- Node.js 20
+- Docker and Docker Compose (optional for local PostgreSQL)
+- PostgreSQL 16 installed locally or via Docker
+
+### Steps to Run Locally
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables:
+   ```
+   DATABASE_URL=postgresql://username:password@localhost:5432/tactical_drops
+   SESSION_SECRET=your-local-session-secret
+   SQUARE_APPLICATION_ID=your-square-application-id
+   SQUARE_LOCATION_ID=your-square-location-id
+   ```
+4. Start local development server: `npm run dev`
+5. Access app at http://localhost:5000
+
+### Testing Cloud Run Configuration Locally
+1. Build Docker image: `docker build -t tactical-drops-app .`
+2. Run container: `docker run -p 8080:8080 --env-file .env tactical-drops-app`
+3. Access app at http://localhost:8080
+
+## Deployment Instructions
+See cloud-run-setup.md for detailed instructions on:
+- Setting up Google Cloud Project
+- Creating Cloud SQL instance
+- Configuring secrets
+- Deploying to Cloud Run
+- Setting up continuous deployment
+
+## Environment Variables
+- DATABASE_URL: PostgreSQL connection string
+- SESSION_SECRET: Secret for session encryption
+- SQUARE_APPLICATION_ID: For Square payment integration
+- SQUARE_LOCATION_ID: For Square payment integration
+- PORT: Port for server to listen on (set automatically by Cloud Run)
+
+## Important Notes
+- Cloud Run will automatically set the PORT environment variable
+- Local development uses port 5000, Cloud Run typically uses port 8080
+- Database connections work differently in Cloud Run (uses Unix socket)
+- The DATABASE_URL format for Cloud SQL: `postgresql://user:password@/database?host=/cloudsql/project:region:instance`
+- Ensure secrets are properly set up in Secret Manager before deployment
+- All Replit-specific configurations have been removed from the project 

@@ -5,6 +5,7 @@ import { createServer as createViteServer, createLogger } from "vite";
 import { type Server } from "http";
 import viteConfig from "../vite.config";
 import { nanoid } from "nanoid";
+import { defineConfig } from 'vite';
 
 const viteLogger = createLogger();
 
@@ -83,3 +84,30 @@ export function serveStatic(app: Express) {
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
+
+export default defineConfig({
+  root: path.resolve(import.meta.dirname, '..'),
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        server: path.resolve(import.meta.dirname, 'index.ts'),
+      },
+      output: {
+        entryFileNames: '[name].js',
+        format: 'cjs',
+      },
+    },
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(import.meta.dirname, '../client/src'),
+      '@shared': path.resolve(import.meta.dirname, '../shared'),
+    },
+  },
+  ssr: {
+    target: 'node',
+    format: 'cjs',
+  },
+});
